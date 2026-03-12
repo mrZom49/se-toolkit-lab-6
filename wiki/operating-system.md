@@ -100,7 +100,7 @@ A service is a long-running [process](#process) that performs specific system fu
 
 Services typically start automatically during system boot and run in the background without direct user interaction. They can be managed using system service managers like `systemd`, `init`, or service scripts.
 
-Common examples include [web servers](./http.md#web-server), [database servers](./database.md#database-server) (`MySQL`/`PostgreSQL`), [`SSH` daemons](./ssh.md#ssh-daemon), and network services.
+Common examples include [web servers](./web-infrastructure.md#web-server), [database servers](./database.md#database-server) (`MySQL`/`PostgreSQL`), [`SSH` daemons](./ssh.md#ssh-daemon), and network services.
 
 Services often [listen on specific ports](./computer-networks.md#listen-on-a-port) to handle incoming requests.
 

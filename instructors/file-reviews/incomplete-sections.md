@@ -13,7 +13,6 @@
   - [`lab/tasks/setup-simple.md`](#labtaskssetup-simplemd)
   - [`lab/tasks/setup.md`](#labtaskssetupmd)
 - [Wiki](#wiki)
-  - [`wiki/api.md`](#wikiapimd)
   - [`wiki/architecture.md`](#wikiarchitecturemd)
   - [`wiki/bash.md`](#wikibashmd)
   - [`wiki/caddy.md`](#wikicaddymd)
@@ -83,13 +82,6 @@
 - [lab/tasks/setup.md:291](../../lab/tasks/setup.md#112-deploy-to-your-vm) — ### 1.12. Deploy to your VM (empty)
 
 ## Wiki
-
-### `wiki/api.md`
-
-- [wiki/api.md:35](../../wiki/api.md#backend) — ## Backend (TODO: )
-- [wiki/api.md:39](../../wiki/api.md#base-url) — ## Base URL (TODO: )
-- [wiki/api.md:43](../../wiki/api.md#what-is-an-api-key) — ## What is an API key (TODO: )
-- [wiki/api.md:51](../../wiki/api.md#fastapi) — ## `FastAPI` (TODO: )
 
 ### `wiki/architecture.md`
 
@@ -277,7 +269,7 @@
 
 ---
 
-**Summary:** 93 incomplete sections total — 68 empty, 25 TODO-only
+**Summary:** 89 incomplete sections total — 68 empty, 21 TODO-only
 
 Most affected files:
 

@@ -25,7 +25,7 @@ Docs:
 
 ### `app` service
 
-The `app` service runs the [backend web server](./http.md#web-server).
+The `app` service runs the [backend web server](./web-infrastructure.md#web-server).
 
 It builds from the root [`Dockerfile`](../Dockerfile), which uses a multi-stage build: the first stage installs [`Python`](./python.md#what-is-python) dependencies with [`uv`](./python.md#uv), and the second stage runs the application.
 
@@ -65,7 +65,7 @@ Configuration in [`docker-compose.yml`](../docker-compose.yml):
 
 ### `caddy` service
 
-The `caddy` service runs [`Caddy`](./caddy.md#what-is-caddy), a [reverse proxy](./computer-networks.md#reverse-proxy) that serves frontend files and forwards [API](./api.md#what-is-an-api) requests to the [`app` service](#app-service).
+The `caddy` service runs [`Caddy`](./caddy.md#what-is-caddy), a [reverse proxy](./web-infrastructure.md#reverse-proxy) that serves frontend files and forwards [API](./api.md#what-is-an-api) requests to the [`app` service](#app-service).
 
 It builds from [`frontend/Dockerfile`](../frontend/Dockerfile), which uses a multi-stage build: the first stage builds the frontend with `Node.js`, and the second stage serves the output with `Caddy`.
 

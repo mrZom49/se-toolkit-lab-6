@@ -3,9 +3,6 @@
 <h2>Table of contents</h2>
 
 - [What is `HTTP`](#what-is-http)
-- [Web server and web client](#web-server-and-web-client)
-  - [Web server](#web-server)
-  - [Web client](#web-client)
 - [Communication using `HTTP`](#communication-using-http)
 - [`HTTP` request](#http-request)
   - [`HTTP` request method](#http-request-method)
@@ -29,33 +26,11 @@
 
 ## What is `HTTP`
 
-`HTTP` (`HyperText Transfer Protocol`) is the foundation of data communication on the web. This [protocol](./computer-networks.md#protocol) defines how messages are formatted and transmitted between [web servers and web clients](#web-server-and-web-client).
-
-## Web server and web client
-
-<!-- TODO explain what web client and web server are outside of the HTTP context
--->
-
-### Web server
-
-A web server is software that delivers content or services to [web clients](#web-client) over a [network](./computer-networks.md#what-is-a-network) (e.g., [Internet](./computer-networks.md#internet)) using a [protocol](./computer-networks.md#protocol).
-
-> [!NOTE]
-> We refer to a web server as software only.
->
-> Other sources may refer to it as hardware too.
->
-> Example: [What is a web server](https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/What_is_a_web_server).
-
-### Web client
-
-A web client is software that requests content from a [web server](#web-server) and displays the received content.
-
-Web clients include [browsers](./useful-programs.md#browser) ([`Chrome`](./useful-programs.md#chrome), [`Firefox`](./useful-programs.md#firefox)) and command-line tools ([`curl`](./useful-programs.md#curl)).
+`HTTP` (`HyperText Transfer Protocol`) is the foundation of data communication on the web. This [protocol](./computer-networks.md#protocol) defines how messages are formatted and transmitted between [web servers](./web-infrastructure.md#web-server) and [web clients](./web-infrastructure.md#web-client).
 
 ## Communication using `HTTP`
 
-The following diagram illustrates the communication between a [web client](#web-client) and [web server](#web-server) using the `HTTP` protocol:
+The following diagram illustrates the communication between a [web client](./web-infrastructure.md#web-client) and [web server](./web-infrastructure.md#web-server) using the `HTTP` protocol:
 
 ```mermaid
 sequenceDiagram

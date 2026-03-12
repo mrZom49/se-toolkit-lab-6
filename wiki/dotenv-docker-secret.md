@@ -66,13 +66,13 @@ Default: `"Learning Management Service"`
 
 ### `APP_DEBUG`
 
-Enables debug mode in the [web server](./http.md#web-server). When `true`, the server returns detailed error messages.
+Enables debug mode in the [web server](./web-infrastructure.md#web-server). When `true`, the server returns detailed error messages.
 
 Default: `false`
 
 ### `APP_RELOAD`
 
-Enables auto-reload. When `true`, the [web server](./http.md#web-server) restarts automatically when source files change.
+Enables auto-reload. When `true`, the [web server](./web-infrastructure.md#web-server) restarts automatically when source files change.
 
 Default: `false`
 

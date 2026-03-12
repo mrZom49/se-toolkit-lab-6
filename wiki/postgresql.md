@@ -16,7 +16,7 @@ Docs:
 
 ## `PostgreSQL` server
 
-The `PostgreSQL` server is the background [service](./operating-system.md#service) process that manages [databases](./database.md#database) and handles queries from [clients](./http.md#web-client).
+The `PostgreSQL` server is the background [service](./operating-system.md#service) process that manages [databases](./database.md#database) and handles queries from [clients](./web-infrastructure.md#web-client).
 
 ## `PostgreSQL` server in this project
 

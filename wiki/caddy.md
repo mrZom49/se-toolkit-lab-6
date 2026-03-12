@@ -12,7 +12,7 @@
 
 ## What is `Caddy`
 
-`Caddy` is an open-source [web server](./http.md#web-server) and [reverse proxy](./computer-networks.md#reverse-proxy).
+`Caddy` is an open-source [web server](./web-infrastructure.md#web-server) and [reverse proxy](./web-infrastructure.md#reverse-proxy).
 
 `Caddy` is configured via a [`Caddyfile`](#caddyfile).
 
@@ -24,7 +24,7 @@ Docs:
 
 ### `Caddyfile`
 
-A `Caddyfile` is `Caddy`'s configuration file. It defines which port `Caddy` [listens](./computer-networks.md#listen-on-a-port) on and where to [forward requests](./computer-networks.md#forward-request).
+A `Caddyfile` is `Caddy`'s configuration file. It defines which port `Caddy` [listens](./computer-networks.md#listen-on-a-port) on and where to [forward requests](./web-infrastructure.md#forward-request).
 
 Docs:
 
@@ -52,7 +52,7 @@ This configuration:
 
 <!-- TODO Rename API endpoints -> API paths? -->
 
-`Caddy` routes [API endpoints](./api.md#endpoint) (`/items*`, `/learners*`, `/interactions*`, `/docs*`, `/openapi.json`) to the [`app` service](./docker-compose-yml.md#app-service).
+`Caddy` routes [API endpoints](./web-api.md#endpoint) (`/items*`, `/learners*`, `/interactions*`, `/docs*`, `/openapi.json`) to the [`app` service](./docker-compose-yml.md#app-service).
 
 ### `<caddy-port>`
 

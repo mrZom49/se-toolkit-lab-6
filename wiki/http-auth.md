@@ -17,7 +17,7 @@ The API key is sent in the `Authorization` header:
 Authorization: Bearer <api-key>
 ```
 
-See [`<api-key>`](./api.md#api-key).
+See [`<api-key>`](./web-api.md#api-key).
 
 Docs:
 
@@ -25,7 +25,7 @@ Docs:
 
 ## HTTP authorization
 
-Authorization is the process of determining whether an authenticated client has permission to access a specific [endpoint](./api.md#endpoint) or resource.
+Authorization is the process of determining whether an authenticated client has permission to access a specific [endpoint](./web-api.md#endpoint) or resource.
 
 A client can be authenticated (identity verified) but still lack permission for certain resources.
 

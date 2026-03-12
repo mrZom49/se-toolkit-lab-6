@@ -26,9 +26,6 @@
 - [URL](#url)
   - [Components of a URL](#components-of-a-url)
   - [URL example](#url-example)
-- [CDN](#cdn)
-- [Reverse proxy](#reverse-proxy)
-  - [Forward request](#forward-request)
 - [Troubleshooting](#troubleshooting)
   - [Service is running but a request fails](#service-is-running-but-a-request-fails)
 
@@ -52,7 +49,7 @@ It uses standardized communication protocols (such as `TCP/IP`) to link billions
 
 A protocol is a set of rules that define how data is transmitted and received over a [network](#what-is-a-network). Protocols govern communication between [machines](#machine).
 
-Example: [`HTTP`](./http.md#what-is-http) is the protocol used for communication between [web servers](./http.md#web-server) and [web clients](./http.md#web-client).
+Example: [`HTTP`](./http.md#what-is-http) is the protocol used for communication between [web servers](./web-infrastructure.md#web-server) and [web clients](./web-infrastructure.md#web-client).
 
 ## IP address
 
@@ -156,7 +153,7 @@ When a [process](./operating-system.md#process) "listens on a port", it means th
 
 The [operating system](./operating-system.md#what-is-an-operating-system) allocates the port to that process, and any incoming network traffic directed to that port will be handled by the listening process.
 
-This is how [services](./api.md#service) like [web servers](./http.md#web-server), [`SSH` daemons](./ssh.md#ssh-daemon), or [databases](./database.md#what-is-a-database) accept connections from [clients](./http.md#web-client).
+This is how [services](./backend.md#service) like [web servers](./web-infrastructure.md#web-server), [`SSH` daemons](./ssh.md#ssh-daemon), or [databases](./database.md#what-is-a-database) accept connections from [clients](./web-infrastructure.md#web-client).
 
 A port can only be listened on by one process at a time.
 
@@ -176,7 +173,7 @@ Example: `UniversityStudent`, `Home_Network`.
 
 ## URL
 
-A URL (`Uniform Resource Locator`) is a reference or address used to identify and locate resources on the [Internet](#internet). It specifies the location of a resource on a [web server](./http.md#web-server) and the [protocol](#protocol) used to access it.
+A URL (`Uniform Resource Locator`) is a reference or address used to identify and locate resources on the [Internet](#internet). It specifies the location of a resource on a [web server](./web-infrastructure.md#web-server) and the [protocol](#protocol) used to access it.
 
 URLs are used by browsers and other applications to retrieve resources like web pages, images, and API endpoints.
 
@@ -205,30 +202,6 @@ Where:
 - Path: `/search`
 - Query: `?q=cats&page=1`
 - Fragment: `#results`
-
-## CDN
-
-A `CDN` (`Content Delivery Network`) is a network of distributed servers that delivers static files (such as `HTML`, `CSS`, and `JavaScript`) to users from a location close to them. Serving files from a `CDN` reduces load on the origin server and improves response time.
-
-## Reverse proxy
-
-A reverse proxy is a server that sits in front of a backend [service](./api.md#service) and [forwards](#forward-request) incoming [client](./http.md#web-client) requests to it.
-
-The client communicates only with the reverse proxy — it does not connect to the backend directly. The reverse proxy passes the request to the backend, receives the response, and returns it to the client.
-
-Common uses:
-
-- **Routing:** direct requests to the appropriate backend service based on the request path.
-- **Serving static files:** serve front-end assets directly without involving the backend.
-- **Port management:** expose a single [port](#port) to clients while backend services run on separate internal ports.
-
-Example: [`Caddy`](./caddy.md#what-is-caddy) is the reverse proxy in this project.
-
-### Forward request
-
-To forward a request, a [reverse proxy](#reverse-proxy) takes an incoming [`HTTP`](./http.md#what-is-http) request from a [client](./http.md#web-client), sends it to a backend [service](./api.md#service), and returns the backend's response to the client.
-
-Example: in this project, [`Caddy`](./caddy.md#what-is-caddy) is configured to [forward API requests](./caddy.md#caddy-forwards-requests-to-backend) to the backend service ([`app` service](./docker-compose-yml.md#app-service)).
 
 ## Troubleshooting
 
