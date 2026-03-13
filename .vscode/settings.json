@@ -21,7 +21,7 @@
 
   // Change the Primary Sidebar location
 
-  "workbench.sideBar.location": "right",
+  "workbench.sideBar.location": "left",
 
   // Markdown settings
 
@@ -33,10 +33,5 @@
 
   "nix.enableLanguageServer": true,
   "nix.serverPath": "nil",
-  "nix.formatterPath": "nixfmt",
-
-  // Necessary for now.
-  // See note here:
-  // https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-python-envs
-  "python.useEnvironmentsExtension": true
+  "nix.formatterPath": "nixfmt"
 }
