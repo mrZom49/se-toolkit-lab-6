@@ -53,7 +53,71 @@ def test_agent_outputs_valid_json_with_required_fields() -> None:
 
     assert "tool_calls" in data, "Missing 'tool_calls' field in output"
     assert isinstance(data["tool_calls"], list), "'tool_calls' must be an array"
-    assert len(data["tool_calls"]) == 0, "'tool_calls' must be empty for Task 1"
+    # Note: tool_calls may or may not be empty depending on the question
+
+
+def test_agent_uses_read_file_tool_for_framework_question() -> None:
+    """Test that agent uses read_file tool when asked about the backend framework.
+
+    This test runs the agent with a question about what framework the backend uses,
+    which should require reading backend source code files.
+    Verifies that read_file is in tool_calls.
+    """
+    project_root = Path(__file__).parent.parent.parent.parent
+
+    question = "What framework does the backend use?"
+
+    result = run_agent(question, project_root)
+
+    assert result.returncode == 0, f"Agent failed: {result.stderr}"
+
+    output = result.stdout.strip()
+    assert output, "Agent produced no output"
+
+    data = json.loads(output)
+
+    # Verify tool_calls contains read_file
+    assert len(data["tool_calls"]) > 0, "Expected tool_calls to be non-empty"
+
+    tool_names = [call.get("tool") for call in data["tool_calls"]]
+    assert "read_file" in tool_names, "Expected read_file to be called"
+
+    # Verify answer is present
+    assert "answer" in data, "Missing 'answer' field in output"
+    assert isinstance(data["answer"], str), "'answer' must be a string"
+    assert len(data["answer"]) > 0, "'answer' must not be empty"
+
+
+def test_agent_uses_query_api_tool_for_item_count_question() -> None:
+    """Test that agent uses query_api tool when asked about item count.
+
+    This test runs the agent with a question about how many items are in the database,
+    which should require calling the GET /items/ API endpoint.
+    Verifies that query_api is in tool_calls.
+    """
+    project_root = Path(__file__).parent.parent.parent.parent
+
+    question = "How many items are in the database?"
+
+    result = run_agent(question, project_root)
+
+    assert result.returncode == 0, f"Agent failed: {result.stderr}"
+
+    output = result.stdout.strip()
+    assert output, "Agent produced no output"
+
+    data = json.loads(output)
+
+    # Verify tool_calls contains query_api
+    assert len(data["tool_calls"]) > 0, "Expected tool_calls to be non-empty"
+
+    tool_names = [call.get("tool") for call in data["tool_calls"]]
+    assert "query_api" in tool_names, "Expected query_api to be called"
+
+    # Verify answer is present
+    assert "answer" in data, "Missing 'answer' field in output"
+    assert isinstance(data["answer"], str), "'answer' must be a string"
+    assert len(data["answer"]) > 0, "'answer' must not be empty"
 
 
 def test_agent_uses_read_file_tool_for_wiki_question() -> None:
