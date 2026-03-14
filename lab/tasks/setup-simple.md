@@ -273,17 +273,15 @@ Your agent needs an LLM to answer questions. [Qwen Code](../../wiki/qwen.md#what
      | python -m json.tool
    ```
 
-<details><summary><b>Alternative: OpenRouter (click to open)</b></summary>
+**Alternative: [OpenRouter](https://openrouter.ai) (free tier, no credit card)**
 
-If you prefer [OpenRouter](https://openrouter.ai), register and get an API key. Then set in `.env.agent.secret`:
+Register at [openrouter.ai](https://openrouter.ai) with your email and get a free API key at [openrouter.ai/keys](https://openrouter.ai/keys). Then set in `.env.agent.secret`:
 
 ```text
 LLM_API_KEY=<your-openrouter-key>
 LLM_API_BASE=https://openrouter.ai/api/v1
 LLM_MODEL=meta-llama/llama-3.3-70b-instruct:free
 ```
-
-</details>
 
 ### 1.8. Coding agent
 

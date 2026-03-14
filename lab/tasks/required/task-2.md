@@ -65,6 +65,7 @@ List files and directories at a given path.
 - **Returns:** newline-separated listing of entries.
 - **Security:** must not list directories outside the project directory.
 
+
 ## Deliverables
 
 ### 1. Plan (`plans/task-2.md`)

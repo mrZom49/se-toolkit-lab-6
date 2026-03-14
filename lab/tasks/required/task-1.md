@@ -32,20 +32,20 @@ uv run agent.py "What does REST stand for?"
 
 ## How to get access to an LLM?
 
-Your agent needs an LLM that supports the OpenAI-compatible chat completions API. You are free to use any provider.
+Your agent needs an LLM that supports the OpenAI-compatible chat completions API. Two **free** options — no credit card required:
 
-**Recommended: [Qwen Code API](../../wiki/qwen.md#set-up-the-qwen-code-api-remote-machine)**
+### Option A: Qwen Code API (recommended)
 
-[Qwen Code](../../wiki/qwen.md#what-is-qwen-code) provides **1000 free requests per day**, works from Russia, and requires no credit card. Follow the [setup instructions](../setup-simple.md#17-set-up-llm-access-qwen-code-api) to deploy it on your VM.
+[Qwen Code](../../wiki/qwen.md#what-is-qwen-code) provides **1000 free requests per day**, works from Russia, no credit card needed. Follow the [setup instructions](../setup-simple.md#17-set-up-llm-access-qwen-code-api) to deploy it on your VM.
 
 | Model | Tool calling | Notes |
 |-------|-------------|-------|
 | `qwen3-coder-plus` | Strong | Recommended, default in `.env.agent.example` |
 | `coder-model` | Strong | Qwen 3.5 Plus |
 
-<details><summary><b>Alternative: OpenRouter (click to open)</b></summary>
+### Option B: OpenRouter (free tier)
 
-[OpenRouter](https://openrouter.ai) offers free models with no credit card required.
+[OpenRouter](https://openrouter.ai) — register with email, no credit card. Get your API key at [openrouter.ai/keys](https://openrouter.ai/keys).
 
 | Model | Tool calling | Notes |
 |-------|-------------|-------|
@@ -56,10 +56,8 @@ Your agent needs an LLM that supports the OpenAI-compatible chat completions API
 > **OpenRouter free-tier limitations:**
 > - Free models have a **50 requests per day** limit per account.
 > - Free models can be **temporarily unavailable** due to upstream provider load (`429` errors).
-> - The autochecker runs 20 questions against your agent — free-tier rate limits may cause failures.
-> - If you use OpenRouter, plan your testing carefully: use `run_eval.py --index N` to test one question at a time.
-
-</details>
+> - The autochecker runs 5 questions against your agent — rate limits may cause failures if you run many tests beforehand.
+> - Test carefully: use `run_eval.py` one question at a time to conserve quota.
 
 Create the agent environment file:
 
