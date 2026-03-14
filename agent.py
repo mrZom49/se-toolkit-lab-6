@@ -18,15 +18,18 @@ from pydantic_settings import BaseSettings
 
 
 class AgentSettings(BaseSettings):
-    """LLM configuration from .env.agent.secret."""
+    """LLM and API configuration from environment files."""
 
     llm_api_key: str
     llm_api_base: str
     llm_model: str
+    lms_api_key: str = ""  # Backend API key from .env.docker.secret
+    agent_api_base_url: str = "http://localhost:42002"  # Base URL for query_api
 
     class Config:
         env_file = ".env.agent.secret"
         env_file_encoding = "utf-8"
+        extra = "allow"  # Allow extra env vars from other files
 
 
 # Project root for path security
@@ -67,22 +70,50 @@ TOOLS = [
                 "required": ["path"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "query_api",
+            "description": "Call the backend API to fetch live data or check system behavior. Use this for questions about item counts, scores, analytics, or system status.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "method": {
+                        "type": "string",
+                        "description": "HTTP method (GET, POST, PUT, DELETE)"
+                    },
+                    "path": {
+                        "type": "string",
+                        "description": "API endpoint path (e.g., '/items/', '/analytics/scores')"
+                    },
+                    "body": {
+                        "type": "string",
+                        "description": "Optional JSON request body for POST/PUT requests"
+                    }
+                },
+                "required": ["method", "path"]
+            }
+        }
     }
 ]
 
 # System prompt for the agent
-SYSTEM_PROMPT = """You are a helpful documentation assistant. You answer questions by reading files from the project wiki.
+SYSTEM_PROMPT = """You are a helpful system assistant. You answer questions by using available tools.
 
 Available tools:
-- list_files: List files in a directory
-- read_file: Read contents of a file
+- list_files: List files in a directory (use for discovering wiki or source files)
+- read_file: Read contents of a file (use for wiki documentation or source code)
+- query_api: Call the backend API (use for live data like item counts, scores, analytics)
 
 Instructions:
-1. First use list_files to discover relevant wiki files
-2. Then use read_file to find the specific information you need
-3. Always include a source reference in your answer (e.g., "wiki/git-workflow.md#resolving-merge-conflicts")
-4. Be concise and accurate
-5. Stop calling tools once you have found the answer
+1. For wiki/documentation questions: use list_files to discover, then read_file to find answers
+2. For system fact questions (framework, ports, status codes): read source code files like backend/app/main.py
+3. For data questions (how many items, scores, rates): use query_api with appropriate endpoints
+4. Always include a source reference when applicable (e.g., "wiki/file.md#section" or "backend/app/file.py")
+5. For API queries, the source can be the endpoint path (e.g., "GET /items/")
+6. Be concise and accurate
+7. Stop calling tools once you have found the answer
 """
 
 
@@ -165,10 +196,72 @@ def list_files(path: str) -> str:
         return f"Error listing directory: {e}"
 
 
+def query_api(method: str, path: str, body: str | None = None, settings: AgentSettings | None = None) -> str:
+    """Call the backend API with authentication.
+
+    Args:
+        method: HTTP method (GET, POST, PUT, DELETE)
+        path: API endpoint path (e.g., '/items/', '/analytics/scores')
+        body: Optional JSON request body for POST/PUT requests
+        settings: Agent settings for API configuration
+
+    Returns:
+        JSON string with status_code and body, or error message
+    """
+    if settings is None:
+        try:
+            settings = AgentSettings()
+        except Exception as e:
+            return f"Error loading settings: {e}"
+
+    try:
+        # Build URL
+        base_url = settings.agent_api_base_url.rstrip('/')
+        url = f"{base_url}{path}"
+
+        # Build headers
+        headers = {
+            "Content-Type": "application/json",
+        }
+
+        # Add authentication if LMS_API_KEY is available
+        if settings.lms_api_key:
+            headers["X-API-Key"] = settings.lms_api_key
+
+        # Build request
+        print(f"Calling API: {method} {url}", file=sys.stderr)
+
+        with httpx.Client(timeout=30.0) as client:
+            if method.upper() == "GET":
+                response = client.get(url, headers=headers)
+            elif method.upper() == "POST":
+                response = client.post(url, headers=headers, content=body or "{}")
+            elif method.upper() == "PUT":
+                response = client.put(url, headers=headers, content=body or "{}")
+            elif method.upper() == "DELETE":
+                response = client.delete(url, headers=headers)
+            else:
+                return f"Error: Unsupported HTTP method: {method}"
+
+        # Build response
+        result = {
+            "status_code": response.status_code,
+            "body": response.text,
+        }
+
+        return json.dumps(result)
+
+    except httpx.HTTPError as e:
+        return f"Error: HTTP error: {e}"
+    except Exception as e:
+        return f"Error calling API: {e}"
+
+
 # Map tool names to functions
 TOOL_FUNCTIONS = {
     "read_file": read_file,
     "list_files": list_files,
+    "query_api": query_api,
 }
 
 
@@ -216,18 +309,19 @@ def call_llm(
     return message
 
 
-def execute_tool_call(tool_call: dict[str, Any]) -> dict[str, Any]:
+def execute_tool_call(tool_call: dict[str, Any], settings: AgentSettings | None = None) -> dict[str, Any]:
     """Execute a single tool call and return the result.
-    
+
     Args:
         tool_call: Tool call dict from LLM response
-        
+        settings: Agent settings for tools that need configuration
+
     Returns:
         Dict with tool name, args, and result
     """
     function = tool_call["function"]
     tool_name = function["name"]
-    
+
     # Parse arguments
     try:
         args = json.loads(function["arguments"])
@@ -237,7 +331,7 @@ def execute_tool_call(tool_call: dict[str, Any]) -> dict[str, Any]:
             "args": {},
             "result": "Error: Invalid arguments JSON"
         }
-    
+
     # Get the tool function
     tool_func = TOOL_FUNCTIONS.get(tool_name)
     if not tool_func:
@@ -246,15 +340,19 @@ def execute_tool_call(tool_call: dict[str, Any]) -> dict[str, Any]:
             "args": args,
             "result": f"Error: Unknown tool '{tool_name}'"
         }
-    
+
     # Execute the tool
     print(f"Executing tool: {tool_name}({args})", file=sys.stderr)
-    
+
     try:
-        result = tool_func(**args)
+        # Pass settings for tools that need it (like query_api)
+        if tool_name == "query_api" and settings:
+            result = tool_func(**args, settings=settings)
+        else:
+            result = tool_func(**args)
     except Exception as e:
         result = f"Error executing tool: {e}"
-    
+
     return {
         "tool": tool_name,
         "args": args,
@@ -264,27 +362,46 @@ def execute_tool_call(tool_call: dict[str, Any]) -> dict[str, Any]:
 
 def extract_source_from_answer(answer: str) -> str:
     """Extract source reference from the LLM's answer.
-    
+
     Looks for patterns like:
     - wiki/file.md#section
+    - backend/app/file.py
+    - GET /api/endpoint
     - (wiki/file.md#section)
     - [source: wiki/file.md#section]
-    
+
     Args:
         answer: The LLM's text answer
-        
+
     Returns:
         Source reference string, or empty string if not found
     """
     import re
-    
+
     # Pattern to match wiki file references with optional section anchor
-    pattern = r"wiki/[\w\-/]+\.md(?:#[\w\-]+)?"
-    
-    matches = re.findall(pattern, answer)
+    wiki_pattern = r"wiki/[\w\-/]+\.md(?:#[\w\-]+)?"
+
+    # Pattern to match backend source files
+    backend_pattern = r"backend/[\w\-/]+\.py"
+
+    # Pattern to match API endpoints (e.g., "GET /items/" or "POST /analytics/scores")
+    api_pattern = r"(?:GET|POST|PUT|DELETE|PATCH)\s+/[\w\-/]+"
+
+    # Try wiki pattern first
+    matches = re.findall(wiki_pattern, answer, re.IGNORECASE)
     if matches:
         return matches[0]
-    
+
+    # Try backend pattern
+    matches = re.findall(backend_pattern, answer, re.IGNORECASE)
+    if matches:
+        return matches[0]
+
+    # Try API pattern
+    matches = re.findall(api_pattern, answer, re.IGNORECASE)
+    if matches:
+        return matches[0]
+
     return ""
 
 
@@ -328,7 +445,7 @@ def run_agentic_loop(
             
             # Execute each tool call
             for tool_call in message["tool_calls"]:
-                tool_result = execute_tool_call(tool_call)
+                tool_result = execute_tool_call(tool_call, settings)
                 tool_calls_log.append(tool_result)
                 
                 # Add tool result to message history
