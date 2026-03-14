@@ -108,7 +108,7 @@ def _run_agent(question: str, timeout: int = 60):
         return None, "agent.py not found"
 
     if result.returncode != 0:
-        stderr_preview = result.stderr.strip()[:200] if result.stderr else ""
+        stderr_preview = result.stderr.strip()[:500] if result.stderr else ""
         return None, f"Agent exited with code {result.returncode}: {stderr_preview}"
 
     stdout = result.stdout.strip()
