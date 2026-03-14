@@ -98,22 +98,37 @@ TOOLS = [
     }
 ]
 
-# System prompt for the agent
+# System prompt for the agent - uses JSON-based tool calling for models that don't support function calling
 SYSTEM_PROMPT = """You are a helpful system assistant. You answer questions by using available tools.
 
-Available tools:
-- list_files: List files in a directory (use for discovering wiki or source files)
-- read_file: Read contents of a file (use for wiki documentation or source code)
-- query_api: Call the backend API (use for live data like item counts, scores, analytics)
+You have access to these tools:
+1. list_files: List files in a directory. Use this FIRST to discover wiki or source files.
+   - Parameter: path (string) - e.g., "wiki"
+2. read_file: Read contents of a file. Use this to get detailed information from files.
+   - Parameter: path (string) - e.g., "wiki/git-workflow.md"
+3. query_api: Call the backend API. Use this for live data like item counts, scores, analytics.
+   - Parameters: method (GET/POST/PUT/DELETE), path (string) - e.g., "GET", "/items/"
 
-Instructions:
-1. For wiki/documentation questions: use list_files to discover, then read_file to find answers
-2. For system fact questions (framework, ports, status codes): read source code files like backend/app/main.py
-3. For data questions (how many items, scores, rates): use query_api with appropriate endpoints
-4. Always include a source reference when applicable (e.g., "wiki/file.md#section" or "backend/app/file.py")
-5. For API queries, the source can be the endpoint path (e.g., "GET /items/")
-6. Be concise and accurate
-7. Stop calling tools once you have found the answer
+To use a tool, respond with ONLY a JSON object like this:
+{"tool": "tool_name", "args": {"param1": "value1"}}
+
+Examples:
+- {"tool": "list_files", "args": {"path": "wiki"}}
+- {"tool": "read_file", "args": {"path": "wiki/git-workflow.md"}}
+- {"tool": "query_api", "args": {"method": "GET", "path": "/items/"}}
+
+When you have found the answer, respond with:
+{"answer": "Your answer here", "source": "wiki/file.md#section"}
+
+Process:
+1. Use list_files to find relevant files
+2. Use read_file to read file contents
+3. Answer based on what you read, including the source
+
+Rules:
+- Always use tools before answering
+- Include source references
+- Be concise
 """
 
 
@@ -291,9 +306,10 @@ def call_llm(
         "model": settings.llm_model,
         "messages": messages,
     }
-    
+
     if tools:
         payload["tools"] = tools
+        payload["tool_choice"] = "auto"  # Let LLM decide when to use tools
 
     print(f"Calling LLM at {url}...", file=sys.stderr)
 
@@ -411,12 +427,12 @@ def run_agentic_loop(
     max_iterations: int = 10,
 ) -> tuple[str, str, list[dict[str, Any]]]:
     """Run the agentic loop to answer a question.
-    
+
     Args:
         question: User's question
         settings: LLM configuration
         max_iterations: Maximum number of tool calls
-        
+
     Returns:
         Tuple of (answer, source, tool_calls)
     """
@@ -425,52 +441,81 @@ def run_agentic_loop(
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": question},
     ]
-    
+
     tool_calls_log: list[dict[str, Any]] = []
-    
+
     for iteration in range(max_iterations):
         print(f"\n--- Iteration {iteration + 1} ---", file=sys.stderr)
-        
-        # Call LLM with tools
-        message = call_llm(messages, settings, tools=TOOLS)
-        
-        # Check if LLM wants to call tools
-        if "tool_calls" in message and message["tool_calls"]:
-            # Add assistant message with tool calls to history
-            messages.append({
-                "role": "assistant",
-                "content": message.get("content"),
-                "tool_calls": message["tool_calls"],
-            })
+
+        # Call LLM (without tools parameter - using JSON-based prompting)
+        message = call_llm(messages, settings, tools=None)
+
+        # Get response content
+        content = message.get("content", "")
+        print(f"LLM response: {content[:200]}...", file=sys.stderr)
+
+        # Try to parse as JSON for tool calls
+        try:
+            import json
+            parsed = json.loads(content.strip())
             
-            # Execute each tool call
-            for tool_call in message["tool_calls"]:
-                tool_result = execute_tool_call(tool_call, settings)
-                tool_calls_log.append(tool_result)
+            # Check if it's a tool call
+            if "tool" in parsed and "args" in parsed:
+                tool_name = parsed["tool"]
+                args = parsed["args"]
                 
-                # Add tool result to message history
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call["id"],
-                    "content": tool_result["result"],
-                })
-            
-            # Continue loop - LLM will process tool results
-            continue
+                # Execute the tool
+                tool_func = TOOL_FUNCTIONS.get(tool_name)
+                if tool_func:
+                    print(f"Executing tool: {tool_name}({args})", file=sys.stderr)
+                    if tool_name == "query_api":
+                        result = tool_func(**args, settings=settings)
+                    else:
+                        result = tool_func(**args)
+                    
+                    tool_calls_log.append({
+                        "tool": tool_name,
+                        "args": args,
+                        "result": result,
+                    })
+                    
+                    # Add result to message history
+                    messages.append({
+                        "role": "assistant",
+                        "content": content,
+                    })
+                    messages.append({
+                        "role": "user",
+                        "content": f"Tool result: {result}",
+                    })
+                    continue
+                else:
+                    messages.append({
+                        "role": "user",
+                        "content": f"Error: Unknown tool '{tool_name}'",
+                    })
+                    continue
+                    
+            # Check if it's a final answer
+            elif "answer" in parsed:
+                answer = parsed["answer"]
+                source = parsed.get("source", "")
+                print(f"\nFinal answer: {answer[:100]}...", file=sys.stderr)
+                return answer, source, tool_calls_log
+                
+        except json.JSONDecodeError:
+            # Not JSON - treat as final answer
+            pass
         
-        # No tool calls - LLM provided final answer
-        answer = message.get("content", "")
-        print(f"\nFinal answer: {answer[:100]}...", file=sys.stderr)
-        
-        # Extract source from answer
+        # Check for source patterns in text answer
+        answer = content
         source = extract_source_from_answer(answer)
-        
+        print(f"\nFinal answer: {answer[:100]}...", file=sys.stderr)
         return answer, source, tool_calls_log
-    
+
     # Reached max iterations
     print(f"\nReached maximum iterations ({max_iterations})", file=sys.stderr)
     
-    # Return best available answer
     if tool_calls_log:
         last_result = tool_calls_log[-1]["result"]
         answer = f"Reached maximum tool calls. Last result: {last_result[:200]}"
